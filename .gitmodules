@@ -1,3 +1,6 @@
 [submodule "libs/SFML"]
 	path = libs/SFML
 	url = https://github.com/SFML/SFML.git
+[submodule "libs/CLI11"]
+	path = libs/CLI11
+	url = git@github.com:CLIUtils/CLI11.git

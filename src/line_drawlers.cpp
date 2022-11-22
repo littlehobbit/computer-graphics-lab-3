@@ -1,5 +1,6 @@
 #include "line_drawlers.h"
 #include "SFML/System/Vector2.hpp"
+#include "minimap.h"
 #include <cmath>
 
 #include <limits>
@@ -7,7 +8,7 @@
 #include <utility>
 
 void SimpleLineDrawler::draw_line(Line line, const sf::Color &color,
-                                  sf::Image &image) const {
+                                  MiniMap &image) const {
   auto start = line.start, end = line.end;
   // std::printf("From (%f,%f) to (%f,%f)\n", start.x, start.y, end.x, end.y);
   // TODO: extract condition
@@ -24,7 +25,7 @@ void SimpleLineDrawler::draw_line(Line line, const sf::Color &color,
   const auto inf = std::numeric_limits<double>::infinity();
   if (k == inf || k == -inf) {
     while (y < std::round(end.y)) {
-      image.setPixel(x, y, color);
+      image.set_pixel({static_cast<int>(x), static_cast<int>(y)}, color);
       y++;
     }
   } else {
@@ -32,7 +33,7 @@ void SimpleLineDrawler::draw_line(Line line, const sf::Color &color,
       int startI = std::round(std::min(std::round(y), std::round(y + k)));
       int endI = std::round(std::max(std::round(y), std::round(y + k)));
       for (int i = startI; i <= endI; i++) {
-        image.setPixel(std::round(x), i, color);
+        image.set_pixel({(int)std::round(x), i}, color);
       }
       y += k;
       x += 1.0;
@@ -41,7 +42,7 @@ void SimpleLineDrawler::draw_line(Line line, const sf::Color &color,
 }
 
 void DdaLineDrawler::draw_line(Line line, const sf::Color &color,
-                               sf::Image &image) const {
+                               MiniMap &image) const {
   auto &start = line.start, &end = line.end;
   sf::Vector2i start_rounded(std::round(start.x), std::round(start.y));
   sf::Vector2i end_rounded(std::round(end.x), std::round(end.y));
@@ -54,7 +55,9 @@ void DdaLineDrawler::draw_line(Line line, const sf::Color &color,
   auto x = start.x, y = start.y;
 
   for (int i = 0; i < l; i++) {
-    image.setPixel(std::round(x), std::round(y), color);
+    image.set_pixel(
+        {static_cast<int>(std::round(x)), static_cast<int>(std::round(y))},
+        color);
 
     x += dx;
     y += dy;

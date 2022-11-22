@@ -8,6 +8,7 @@ add_executable(
     src/filler.cpp
     src/line_drawlers.cpp
     src/triangle.cpp
+    src/minimap.cpp
 )
 
 add_subdirectory(libs)
@@ -16,5 +17,5 @@ target_link_libraries(
     ${PROJECT_NAME}
     sfml-graphics    
     sfml-window    
-    # CLI11::CLI11
+    CLI11::CLI11
 )

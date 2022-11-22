@@ -1,8 +1,9 @@
 #ifndef LINE_DRAWLERS_H
 #define LINE_DRAWLERS_H
 
-#include "SFML/Graphics/Image.hpp"
+#include "minimap.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Image.hpp>
 
 struct Line {
   sf::Vector2f start;
@@ -14,20 +15,19 @@ public:
   virtual ~LineDrawler() = default;
 
   virtual void draw_line(Line line, const sf::Color &color,
-                         sf::Image &image) const = 0;
+                         MiniMap &image) const = 0;
 };
 
 class SimpleLineDrawler : public LineDrawler {
 public:
   void draw_line(Line line, const sf::Color &color,
-                 sf::Image &image) const override;
+                 MiniMap &image) const override;
 };
 
 class DdaLineDrawler : public LineDrawler {
 public:
   void draw_line(Line line, const sf::Color &color,
-                 sf::Image &image) const override;
+                 MiniMap &image) const override;
 };
-
 
 #endif

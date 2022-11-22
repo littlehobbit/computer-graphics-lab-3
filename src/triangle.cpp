@@ -2,6 +2,7 @@
 #include "SFML/Graphics/Color.hpp"
 #include "SFML/Graphics/Image.hpp"
 #include "SFML/System/Vector2.hpp"
+#include "minimap.h"
 
 #include <cstdio>
 #include <numeric>
@@ -25,16 +26,15 @@ std::vector<Line> Triangle::get_medians() const {
 }
 
 // TODO: move border_color & fill_color to class members
-void Triangle::draw(sf::Image &image, const sf::Color &border_color,
-                    const sf::Color &fill_color) const {
+void Triangle::draw(MiniMap &image) const {
   if (_drawler) {
-    _drawler->draw_line({_points[0], _points[1]}, border_color, image);
-    _drawler->draw_line({_points[1], _points[2]}, border_color, image);
-    _drawler->draw_line({_points[2], _points[0]}, border_color, image);
+    _drawler->draw_line({_points[0], _points[1]}, _border_color, image);
+    _drawler->draw_line({_points[1], _points[2]}, _border_color, image);
+    _drawler->draw_line({_points[2], _points[0]}, _border_color, image);
   }
 
   if (_filler) {
-    _filler->fill(get_median_intersection(), fill_color, border_color, image);
+    _filler->fill(get_median_intersection(), _fill_color, _border_color, image);
   }
 }
 
