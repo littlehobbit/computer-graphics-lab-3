@@ -3,16 +3,14 @@
 #include <iostream>
 #include <memory>
 
-#include "CLI/App.hpp"
-#include "SFML/Graphics/PrimitiveType.hpp"
-#include "SFML/Graphics/RenderTarget.hpp"
-#include "SFML/Graphics/Vertex.hpp"
-#include "SFML/Graphics/VertexArray.hpp"
-#include "SFML/System/Vector2.hpp"
-#include "filler.h"
-#include "line_drawlers.h"
-#include "minimap.h"
-#include "triangle.h"
+#include <CLI/App.hpp>
+#include <SFML/Graphics/PrimitiveType.hpp>
+#include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/Vertex.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Time.hpp>
+#include <SFML/System/Vector2.hpp>
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Image.hpp>
@@ -21,38 +19,57 @@
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Window/VideoMode.hpp>
 
+#include "filler/recursive_filler.h"
+#include "filler/scanning_line_filler.h"
+#include "line_drawler/dda_line_drawler.h"
+#include "line_drawler/simple_line_drawler.h"
+#include "minimap/pixel_perfect_minimap.h"
+#include "triangle.h"
+
 #include <CLI/CLI.hpp>
 
 #include <cmath>
+#include <vector>
 
-// TODO: collect drawed pixel count & time of drawing
+size_t drawed_pixels{0};
+size_t filled{0};
+
+sf::Time line_draw_time;
+sf::Time fill_time;
+
 template <typename Drawler> class MetricDrawlerDecorator : public Drawler {
 public:
   using Base = Drawler;
-  void draw_line(Line line, const sf::Color &color,
-                 MiniMap &image) const override {
-    // TODO: start timer
-    Base::draw_line(line, color, image);
-    // TODO: end timer
-    // TODO: print result
+  size_t draw_line(Line line, const sf::Color &color,
+                   MiniMap &image) const override {
+    sf::Clock clock;
+    auto ret = Base::draw_line(line, color, image);
+    line_draw_time += clock.getElapsedTime();
+
+    drawed_pixels += ret;
+    return ret;
   }
 };
 
 template <typename Filler> class MetricFillerDecorator : public Filler {
 public:
   using Base = Filler;
-  void fill(const sf::Vector2f &start, const sf::Color &fill_color,
-            const sf::Color &border_color, MiniMap &image) const override {
-    // TODO: start timer
-    Base::fill(start, fill_color, border_color, image);
-    // TODO: end timer
-    // TODO: print result
+  size_t fill(const sf::Vector2f &start, const sf::Color &fill_color,
+              const sf::Color &border_color, MiniMap &image) const override {
+    sf::Clock clock;
+    auto ret = Base::fill(start, fill_color, border_color, image);
+    fill_time += clock.getElapsedTime();
+
+    filled += ret;
+    return ret;
   }
 };
 
 void show_coords(sf::RenderWindow &window, uint32_t pixel_width);
 
-// TODO: счетчики (посмотреть какие нада)
+std::vector<Line>
+get_connecting_medians_lines(const std::vector<Triangle> &triangles);
+
 int main(int argc, char *argv[]) {
   CLI::App app("triangle drawler", "lab-3");
 
@@ -85,9 +102,10 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<LineDrawler> line_drawler;
 
   if (line_algorithm == "dda") {
-    line_drawler = std::make_shared<DdaLineDrawler>();
+    line_drawler = std::make_shared<MetricDrawlerDecorator<DdaLineDrawler>>();
   } else if (line_algorithm == "simple") {
-    line_drawler = std::make_shared<SimpleLineDrawler>();
+    line_drawler =
+        std::make_shared<MetricDrawlerDecorator<SimpleLineDrawler>>();
   } else {
     std::cerr << "Incorrect line algo\n";
     return 1;
@@ -95,14 +113,15 @@ int main(int argc, char *argv[]) {
 
   std::shared_ptr<Filler> filler;
   if (fill_algorithm == "recursive") {
-    filler = std::make_shared<RecursiveFiller>();
+    filler = std::make_shared<MetricFillerDecorator<RecursiveFiller>>();
   } else if (fill_algorithm == "scan") {
-    filler = std::make_shared<ScanningLineFiller>();
+    filler = std::make_shared<MetricFillerDecorator<ScanningLineFiller>>();
   } else {
     std::cerr << "Incorrect fill algo\n";
     return 1;
   }
 
+  // hard math
   const auto half_angle = angle / 2 * M_PI / 180.0;
   const auto height = triangular_side * std::cos(half_angle);
   const auto width = 2 * triangular_side * std::sin(half_angle);
@@ -111,15 +130,14 @@ int main(int argc, char *argv[]) {
   const size_t screen_width = width + 2 * offset;
   const size_t screen_height = height + 2 * offset;
 
-  const auto top_point = sf::Vector2f{std::round(screen_width / 2.0f), offset * 1.0f};
-  const auto left_point =
-      sf::Vector2f(std::round(top_point.x - width / 2), std::round(top_point.y + height));
-  const auto right_point =
-      sf::Vector2f(std::round(top_point.x + width / 2), std::round(top_point.y + height));
+  const auto top_point =
+      sf::Vector2f{std::round(screen_width / 2.0f), offset * 1.0f};
+  const auto left_point = sf::Vector2f(std::round(top_point.x - width / 2),
+                                       std::round(top_point.y + height));
+  const auto right_point = sf::Vector2f(std::round(top_point.x + width / 2),
+                                        std::round(top_point.y + height));
 
   Triangle triangle({left_point, top_point, right_point});
-
-  triangle.set_line_drawler(line_drawler);
 
   auto small_triangles = triangle.split_by_medians();
   for (auto &tr : small_triangles) {
@@ -132,18 +150,10 @@ int main(int argc, char *argv[]) {
         sf::Color{(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand()});
   }
 
-  std::vector<Line> medians_centers = {
-      {small_triangles.back().get_median_intersection(),
-       small_triangles.front().get_median_intersection()}};
-  // TODO: переделать
-  for (int i = 0; i < small_triangles.size() - 1; i++) {
-    medians_centers.push_back(
-        {small_triangles[i].get_median_intersection(),
-         small_triangles[i + 1].get_median_intersection()});
-  }
+  std::vector<Line> medians_centers =
+      get_connecting_medians_lines(small_triangles);
 
   PixelPerfectImage image(screen_width, screen_height, pixel_width);
-  triangle.draw(image);
 
   for (auto &tr : small_triangles) {
     tr.draw(image);
@@ -153,8 +163,16 @@ int main(int argc, char *argv[]) {
     line_drawler->draw_line(median, sf::Color::Magenta, image);
   }
 
+  triangle.draw(image);
+
   sf::RenderWindow window(
       sf::VideoMode(image.get_size().width, image.get_size().height), "lab-3");
+
+  std::cout << "Draw lines for " << line_draw_time.asMicroseconds() << "us\n";
+  std::cout << "Draw pixels for lines: " << drawed_pixels << std::endl;
+
+  std::cout << "Fill areas for " << fill_time.asMicroseconds() << "us\n";
+  std::cout << "Filled pixels: " << filled << std::endl;
 
   while (window.isOpen()) {
     sf::Event event;
@@ -192,4 +210,18 @@ void show_coords(sf::RenderWindow &window, uint32_t pixel_width) {
 
     window.draw(vertial_line, 2, sf::PrimitiveType::Lines);
   }
+}
+
+std::vector<Line>
+get_connecting_medians_lines(const std::vector<Triangle> &triangles) {
+  std::vector<Line> medians_centers = {
+      {triangles.back().get_median_intersection(),
+       triangles.front().get_median_intersection()}};
+
+  for (int i = 0; i < triangles.size() - 1; i++) {
+    medians_centers.push_back({triangles[i].get_median_intersection(),
+                               triangles[i + 1].get_median_intersection()});
+  }
+
+  return medians_centers;
 }

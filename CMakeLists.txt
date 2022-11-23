@@ -5,10 +5,8 @@ project(lab-3)
 add_executable(
     ${PROJECT_NAME}
     src/main.cpp
-    src/filler.cpp
-    src/line_drawlers.cpp
     src/triangle.cpp
-    src/minimap.cpp
+    src/minimap/pixel_perfect_minimap.cpp
 )
 
 add_subdirectory(libs)
@@ -19,3 +17,5 @@ target_link_libraries(
     sfml-window    
     CLI11::CLI11
 )
+
+target_include_directories(${PROJECT_NAME} PUBLIC src)

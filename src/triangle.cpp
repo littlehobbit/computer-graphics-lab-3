@@ -1,11 +1,13 @@
 #include "triangle.h"
-#include "SFML/Graphics/Color.hpp"
-#include "SFML/Graphics/Image.hpp"
-#include "SFML/System/Vector2.hpp"
-#include "minimap.h"
+
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/Image.hpp>
+#include <SFML/System/Vector2.hpp>
 
 #include <cstdio>
 #include <numeric>
+
+#include "minimap/minimap.h"
 
 sf::Vector2f Triangle::get_median_intersection() const {
   const auto sum = _points[0] + _points[1] + _points[2];

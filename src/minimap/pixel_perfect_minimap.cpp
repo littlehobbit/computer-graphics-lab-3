@@ -1,4 +1,5 @@
-#include "minimap.h"
+#include "pixel_perfect_minimap.h"
+
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>

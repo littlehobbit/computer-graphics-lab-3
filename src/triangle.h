@@ -1,16 +1,17 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/System/Vector2.hpp>
+
 #include <cstddef>
 #include <memory>
 
-#include "SFML/Graphics/Color.hpp"
-#include "SFML/Graphics/Image.hpp"
-#include "SFML/Graphics/RenderTarget.hpp"
-#include "filler.h"
-#include "line_drawlers.h"
-#include "minimap.h"
+#include "filler/filler.h"
+#include "line_drawler/line_drawler.h"
+#include "minimap/minimap.h"
 
 class Triangle {
 public:
