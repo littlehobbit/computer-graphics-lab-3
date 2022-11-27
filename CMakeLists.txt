@@ -6,7 +6,7 @@ add_executable(
     ${PROJECT_NAME}
     src/main.cpp
     src/triangle.cpp
-    src/minimap/pixel_perfect_minimap.cpp
+    src/minimap/up_scaled_image.cpp
 )
 
 add_subdirectory(libs)

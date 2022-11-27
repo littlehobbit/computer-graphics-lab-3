@@ -3,7 +3,6 @@
 #include <iostream>
 #include <memory>
 
-#include <CLI/App.hpp>
 #include <SFML/Graphics/PrimitiveType.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Vertex.hpp>
@@ -13,22 +12,23 @@
 #include <SFML/System/Vector2.hpp>
 
 #include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Texture.hpp>
 #include <SFML/Window/VideoMode.hpp>
 
 #include "filler/recursive_filler.h"
 #include "filler/scanning_line_filler.h"
 #include "line_drawler/dda_line_drawler.h"
 #include "line_drawler/simple_line_drawler.h"
-#include "minimap/pixel_perfect_minimap.h"
+#include "minimap/delay_decorator.h"
+#include "minimap/up_scaled_image.h"
 #include "triangle.h"
+
+#include <future>
 
 #include <CLI/CLI.hpp>
 
 #include <cmath>
+#include <thread>
 #include <vector>
 
 size_t drawed_pixels{0};
@@ -153,20 +153,22 @@ int main(int argc, char *argv[]) {
   std::vector<Line> medians_centers =
       get_connecting_medians_lines(small_triangles);
 
-  PixelPerfectImage image(screen_width, screen_height, pixel_width);
+  sf::RenderWindow window(
+      sf::VideoMode(screen_width * pixel_width, screen_height * pixel_width),
+      "lab-3");
+
+  using namespace std::chrono_literals;
+  DelayImageDecorator image(screen_width, screen_height, pixel_width, window,
+                            10ms);
 
   for (auto &tr : small_triangles) {
     tr.draw(image);
+
   }
 
   for (auto &median : medians_centers) {
     line_drawler->draw_line(median, sf::Color::Magenta, image);
   }
-
-  triangle.draw(image);
-
-  sf::RenderWindow window(
-      sf::VideoMode(image.get_size().width, image.get_size().height), "lab-3");
 
   std::cout << "Draw lines for " << line_draw_time.asMicroseconds() << "us\n";
   std::cout << "Draw pixels for lines: " << drawed_pixels << std::endl;

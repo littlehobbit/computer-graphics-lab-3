@@ -27,7 +27,6 @@ std::vector<Line> Triangle::get_medians() const {
   };
 }
 
-// TODO: move border_color & fill_color to class members
 void Triangle::draw(MiniMap &image) const {
   if (_drawler) {
     _drawler->draw_line({_points[0], _points[1]}, _border_color, image);

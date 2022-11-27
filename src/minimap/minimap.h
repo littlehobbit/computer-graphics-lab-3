@@ -18,7 +18,7 @@ public:
 
   virtual sf::IntRect get_size() const = 0;
 
-  virtual void draw(sf::RenderTarget &render) const = 0;
+  virtual void draw(sf::RenderWindow &render) const = 0;
 };
 
 #endif
